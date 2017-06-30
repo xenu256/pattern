@@ -45,12 +45,12 @@ def decode_utf8(string):
             except:
                 pass
         return string
-    return unicode(string)
+    return str(string)
 
 
 def encode_utf8(string):
     """Returns the given string as a Python byte string (if possible)."""
-    if isinstance(string, unicode):
+    if isinstance(string, str):
         try:
             return string.encode("utf-8")
         except:
@@ -293,7 +293,7 @@ class MailFolder(object):
             elif attachments:
                 d[ATTACHMENTS].append((p.get_content_type(), p.get_payload()))
         for k in d:
-            if isinstance(d[k], basestring):
+            if isinstance(d[k], str):
                 d[k] = d[k].strip()
                 d[k] = d[k].replace("\r\n", "\n")
         return d
@@ -301,7 +301,7 @@ class MailFolder(object):
     def __iter__(self):
         """ Returns an iterator over all the messages in the folder, latest-first.
         """
-        for i in reversed(range(len(self))):
+        for i in reversed(list(range(len(self)))):
             yield self[i]
 
     def __len__(self):

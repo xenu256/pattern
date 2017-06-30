@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -30,8 +30,8 @@ def corpus(path, encoding="utf-8"):
         with slash-encoded tokens (e.g., the/DT cat/NN).
     """
     for s in open(path, encoding=encoding):
-        s = map(lambda w:  w.split("/"), s.strip().split(" "))
-        s = map(lambda w: (w[0].replace("&slash;", "/"), w[1]), s)
+        s = [w.split("/") for w in s.strip().split(" ")]
+        s = [(w[0].replace("&slash;", "/"), w[1]) for w in s]
         yield s
 
 # The corpus is included in the Pattern download zip, in pattern/test/corpora:
@@ -64,7 +64,7 @@ for s in data:
         f[w][tag] += 1
 
 known, unknown = set(), set()
-for w, tags in f.items():
+for w, tags in list(f.items()):
     n = sum(tags.values())  # total count
     m = sorted(tags, key=tags.__getitem__, reverse=True)[
         0]  # most frequent tag

@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -94,7 +94,7 @@ print(len(m.lsa.concepts[0]))
 m.lsa = None
 m.reduce(100)
 
-for feature, weight in m.lsa.concepts[15].items():  # concept id=2
+for feature, weight in list(m.lsa.concepts[15].items()):  # concept id=2
     if abs(weight) > 0.1:
         print(feature)
 

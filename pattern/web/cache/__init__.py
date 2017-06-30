@@ -12,17 +12,17 @@ except:
     md5 = md5.new
 
 try:
-    unicode
+    str
 except NameError:
-    unicode = str
-    basestring = str
+    str = str
+    str = str
 
 #### UNICODE #############################################################
 
 
 def decode_string(v, encoding="utf-8"):
     """Returns the given value as a Unicode string (if possible)."""
-    if isinstance(encoding, basestring):
+    if isinstance(encoding, str):
         encoding = ((encoding,),) + (("windows-1252",), ("utf-8", "ignore"))
     if isinstance(v, str):
         for e in encoding:
@@ -31,14 +31,14 @@ def decode_string(v, encoding="utf-8"):
             except:
                 pass
         return v
-    return unicode(v)
+    return str(v)
 
 
 def encode_string(v, encoding="utf-8"):
     """Returns the given value as a Python byte string (if possible)."""
-    if isinstance(encoding, basestring):
+    if isinstance(encoding, str):
         encoding = ((encoding,),) + (("windows-1252",), ("utf-8", "ignore"))
-    if isinstance(v, unicode):
+    if isinstance(v, str):
         for e in encoding:
             try:
                 return v.encode(*e)
@@ -122,7 +122,7 @@ class Cache(object):
         except OSError:
             pass
 
-    def get(self, k, unicode=True):
+    def get(self, k, str=True):
         """Returns the data stored with the given id.
 
         With unicode=True, returns a Unicode string.
@@ -132,7 +132,7 @@ class Cache(object):
             f = open(self._hash(k), "rb")
             v = f.read().lstrip(codecs.BOM_UTF8)
             f.close()
-            if unicode is True:
+            if str is True:
                 return decode_utf8(v)
             else:
                 return v

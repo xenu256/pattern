@@ -13,7 +13,7 @@ import time
 import warnings
 
 try:
-    from StringIO import StringIO
+    from io import StringIO
 except ImportError:
     from io import StringIO
 if sys.version_info[0:2] < (2, 7):
@@ -22,10 +22,10 @@ else:
     import unittest
 
 try:
-    unicode
+    str
 except NameError:
-    unicode = str
-    basestring = str
+    str = str
+    str = str
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 

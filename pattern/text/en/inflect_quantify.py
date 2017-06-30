@@ -20,7 +20,7 @@ except:
 
 if sys.version > "3":
     long = int
-    basestring = str
+    str = str
 
 sys.path.insert(0, os.path.join(MODULE, "..", "..", "..", ".."))
 
@@ -43,7 +43,7 @@ NUMERALS = {
     "nine":  9,    "nineteen": 19
 }
 
-NUMERALS_INVERSE = dict((i, w) for w, i in NUMERALS.items())  # 0 => "zero"
+NUMERALS_INVERSE = dict((i, w) for w, i in list(NUMERALS.items()))  # 0 => "zero"
 NUMERALS_VERBOSE = {
     "half": (1, 0.5),
     "dozen": (12, 0.0),
@@ -181,7 +181,7 @@ def numerals(n, round=2):
     numerals(2.249, round=3) => two point two hundred and forty-nine
 
     """
-    if isinstance(n, basestring):
+    if isinstance(n, str):
         if n.isdigit():
             n = int(n)
         else:
@@ -196,7 +196,7 @@ def numerals(n, round=2):
     # Split the number into integral and fractional part.
     # Converting the integral part to a long ensures a better accuracy during
     # the recursion.
-    i = long(n // 1)
+    i = int(n // 1)
     f = n - i
     # The remainder, which we will stringify in recursion.
     r = 0
@@ -236,7 +236,7 @@ def numerals(n, round=2):
         f = f.replace("0.", "", 1).rstrip("0")
         f, z = zshift(f)
         f = f and " %s%s %s" % (
-            RADIX, " %s" % ZERO * z, numerals(long(f))) or ""
+            RADIX, " %s" % ZERO * z, numerals(int(f))) or ""
     else:
         f = ""
     if r == 0:
@@ -335,9 +335,9 @@ def count(*args, **kwargs):
     approximation.
 
     """
-    if len(args) == 2 and isinstance(args[0], basestring):
+    if len(args) == 2 and isinstance(args[0], str):
         return approximate(args[0], args[1], kwargs.get("plural", {}))
-    if len(args) == 1 and isinstance(args[0], basestring) and "amount" in kwargs:
+    if len(args) == 1 and isinstance(args[0], str) and "amount" in kwargs:
         return approximate(args[0], kwargs["amount"], kwargs.get("plural", {}))
     if len(args) == 1 and isinstance(args[0], dict):
         count = args[0]
@@ -412,7 +412,7 @@ def reflect(object, quantify=True, replace=readable_types):
             types.append(_type(object))
         # Classes and modules.
         else:
-            for v in object.__dict__.values():
+            for v in list(object.__dict__.values()):
                 try:
                     types.append(str(v.__classname__))
                 except:
@@ -424,7 +424,7 @@ def reflect(object, quantify=True, replace=readable_types):
     # Dictionaries have keys pointing to objects.
     elif isinstance(object, dict):
         types += [_type(k) for k in object]
-        types += [_type(v) for v in object.values()]
+        types += [_type(v) for v in list(object.values())]
     else:
         types.append(_type(object))
     # Clean up type strings.

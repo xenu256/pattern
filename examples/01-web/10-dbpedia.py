@@ -1,5 +1,5 @@
 # -*- coding: utf-8 *-*
-from __future__ import print_function
+
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -138,7 +138,7 @@ print()
 
 # 6) People whose first name includes "Édouard"
 
-q = u"""
+q = """
 prefix dbo: <http://dbpedia.org/ontology/>
 prefix foaf: <http://xmlns.com/foaf/0.1/>
 select ?person ?name where {

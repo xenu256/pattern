@@ -122,7 +122,7 @@ def gender(word):
     # Most nouns ending in -a (-e) are feminine, -o (-i) masculine:
     if w.endswith(("ore", "ista", "mma")):
         return MALE
-    if w.endswith(("a", u"tà", u"tù", "ione", "rice")):
+    if w.endswith(("a", "tà", "tù", "ione", "rice")):
         return FEMALE
     if w.endswith(("e", "oni")):
         return (FEMALE, PLURAL)
@@ -204,13 +204,13 @@ singular_majority_vote = [
     ("ali",  "ale"), ("ici", "ico"), ("nze", "nza"), ("ori", "ore"),
     ("che",  "ca"), ("ati", "ato"), ("ari", "ario"), ("tti", "tto"),
     ("eri",  "ero"), ("chi", "co"), ("ani", "ano"), ("ure", "ura"),
-    (u"ità", u"ità"), ("ivi", "ivo"), ("ini", "ino"), ("iti", "ito"),
+    ("ità", "ità"), ("ivi", "ivo"), ("ini", "ino"), ("iti", "ito"),
     ("emi",  "ema"), ("ili", "ile"), ("oli", "olo"), ("esi", "ese"),
     ("ate",  "ata"), ("ssi", "sso"), ("rie", "ria"), ("ine", "ina"),
     ("lli",  "llo"), ("ggi", "ggio"), ("tri", "tro"), ("imi", "imo")
 ]
 
-singular_irregular = dict((v, k) for k, v in plural_irregular.items())
+singular_irregular = dict((v, k) for k, v in list(plural_irregular.items()))
 
 
 def singularize(word, pos=NOUN, custom={}):
@@ -269,10 +269,10 @@ verb_majority_vote = [
     ("rono", "re"), ("isse", "ire"), ("isti", "ire"), ("tino", "tare"),
     ("tato", "tare"), ("irai", "ire"), ("tavo", "tare"), ("tavi", "tare"),
     ("tava", "tare"), ("tate", "tare"), ("iste", "ire"), ("irei", "ire"),
-    ("immo", "ire"), (u"rerò", "rare"), (u"rerà", "rare"), ("iavo", "iare"),
+    ("immo", "ire"), ("rerò", "rare"), ("rerà", "rare"), ("iavo", "iare"),
     ("iavi", "iare"), ("iava", "iare"), ("iato", "iare"), ("iare", "iare"),
     ("hino", "are"), ("ssi", "re"), ("sse", "re"), ("ndo", "re"),
-    (u"irò", "ire"), ("tai", "tare"), ("ite", "ire"), (u"irà", "ire"),
+    ("irò", "ire"), ("tai", "tare"), ("ite", "ire"), ("irà", "ire"),
     ("sco", "re"), ("sca", "re"), ("iai", "iare"), ("ii", "ire"),
     ("hi", "are")
 ]
@@ -315,7 +315,7 @@ class Verbs(_Verbs):
         # Many verbs end in -ire and have a regular inflection:
         for x in ((
                 # future
-                u"irò", "irai", u"irà", "iremo", "irete", "iranno",
+                "irò", "irai", "irà", "iremo", "irete", "iranno",
                 # conditional
                 "irei", "iresti", "irebbe", "iremmo", "ireste", "irebbero",
                 # subjunctive I
@@ -332,7 +332,7 @@ class Verbs(_Verbs):
         # Many verbs end in -are and have a regular inflection:
         for x in ((
                 # future
-                u"erò", "erai", u"erà", "eremo", "erete", "eranno",
+                "erò", "erai", "erà", "eremo", "erete", "eranno",
                 # conditional
                 "erei", "eresti", "erebbe", "eremmo", "ereste", "erebbero",
                 # subjunctive I
@@ -342,7 +342,7 @@ class Verbs(_Verbs):
                 # past imperfective
                 "avo", "avi", "ava", "avamo", "avate", "avano",
                 # past perfective
-                "ai", "asti", u"ò", "ammo", "aste", "arono", "ato",
+                "ai", "asti", "ò", "ammo", "aste", "arono", "ato",
                 "iamo", "ate", "ano", "ando")):                             # present
             if v.endswith(x):
                 return v[:-len(x)] + "are"
@@ -353,15 +353,15 @@ class Verbs(_Verbs):
                 # past imperfective
                 "evo", "evi", "eva", "evamo", "evate", "evano",
                 # past perfective
-                "ei", "esti", u"è", "emmo", "este", "erono", "eto",
+                "ei", "esti", "è", "emmo", "este", "erono", "eto",
                 "ete", "ono", "endo")):                                     # present
             if v.endswith(x):
                 return v[:-len(x)] + "ere"
-        if v.endswith(u"à"):
+        if v.endswith("à"):
             return v[:-1] + "e"
-        if v.endswith(u"ì"):
+        if v.endswith("ì"):
             return v[:-1] + "ire"
-        if v.endswith(u"e"):
+        if v.endswith("e"):
             return v[:-1] + "ere"
         if v.endswith(("a", "i", "o")):
             return v[:-1] + "are"
@@ -381,16 +381,16 @@ class Verbs(_Verbs):
             b = b[:-1]  # cominciare => tu cominci
         if v.endswith("are"):
             # -are = 1st conjugation
-            a1, a2, a3, a4, a5, a6, a7 = "a", "a", u"ò", "a", "i", "e", "a"
+            a1, a2, a3, a4, a5, a6, a7 = "a", "a", "ò", "a", "i", "e", "a"
         elif v.endswith("ere"):
             # -ere = 2nd conjugation
-            a1, a2, a3, a4, a5, a6, a7 = "e", "o", u"è", "i", "a", "e", "e"
+            a1, a2, a3, a4, a5, a6, a7 = "e", "o", "è", "i", "a", "e", "e"
         elif v.endswith("ire"):
             # -ire = 3rd conjugation
             a1, a2, a3, a4, a5, a6, a7 = "i", "o", "i", "i", "a", "i", "e"
         else:
             # -orre, -urre = use 2nd conjugation
-            a1, a2, a3, a4, a5, a6, a7 = "e", "o", u"è", "i", "a", "e", "e"
+            a1, a2, a3, a4, a5, a6, a7 = "e", "o", "è", "i", "a", "e", "e"
         if verb.lower().endswith("ire"):
             # –ire verbs can add -isc between the root and declination.
             isc = "isc"
@@ -403,7 +403,7 @@ class Verbs(_Verbs):
              "mmo", b + a1 + "ste", b + a1 + "rono", b + a1 + "to",
              b + a1 + "vo", b + a1 + "vi", b + a1 + "va", b +
              a1 + "vamo", b + a1 + "vate", b + a1 + "vano",
-             b + a6 + u"rò", b + a6 + "rai", b + a6 + u"rà", b +
+             b + a6 + "rò", b + a6 + "rai", b + a6 + "rà", b +
              a6 + "remo", b + a6 + "rete", b + a6 + "ranno",
              b + a6 + "rei", b + a6 + "resti", b + a6 + "rebbe", b +
              a6 + "remmo", b + a6 + "reste", b + a6 + "rebbero",
@@ -420,7 +420,7 @@ class Verbs(_Verbs):
             x = x.replace("gha",  "ga")
             x = x.replace("gga",  "ggia")
             x = x.replace("cho",  "co")
-            x = x.replace(u"chò", u"cò")
+            x = x.replace("chò", "cò")
             v[i] = x
         return v
 

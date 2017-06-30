@@ -427,7 +427,7 @@ def pluralize(word, pos=NOUN, custom={}, classical=True):
         else:
             return word.replace(w[-1], pluralize(w[-1], pos, custom, classical))
     # Only a very few number of adjectives inflect.
-    n = range(len(plural_rules))
+    n = list(range(len(plural_rules)))
     if pos.startswith(ADJECTIVE):
         n = [0, 1]
     # Apply pluralization rules.

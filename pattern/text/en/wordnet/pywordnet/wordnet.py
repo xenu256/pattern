@@ -36,8 +36,8 @@ clearly(adv.)
 [{noun: Canis, genus Canis}, {noun: pack}]
 
 """
-from __future__ import print_function
-from __future__ import absolute_import
+
+
 
 __author__ = "Oliver Steele <steele@osteele.com>"
 __version__ = "2.0.1"
@@ -297,7 +297,7 @@ class Word:
         positions = {}
         for sense in self.getSenses():
             positions[sense.position] = 1
-        return positions.keys()
+        return list(positions.keys())
 
     adjectivePositions = getAdjectivePositions  # backwards compatability
 
@@ -333,7 +333,7 @@ class Word:
     #
     # Sequence protocol (a Word's elements are its Senses)
     #
-    def __nonzero__(self):
+    def __bool__(self):
         return 1
 
     def __len__(self):
@@ -402,7 +402,7 @@ class Synset:
                 remainder[1:], 3, int(remainder[0]))
 
             def extractVerbFrames(index, vfTuples):
-                return tuple(map(lambda t: int(t[1]), filter(lambda t, i=index: int(t[2], 16) in (0, i), vfTuples)))
+                return tuple([int(t[1]) for t in list(filter(lambda t, i=index: int(t[2], 16) in (0, i), vfTuples))])
             senseVerbFrames = []
             for index in range(1, len(self._senseTuples) + 1):
                 senseVerbFrames.append(extractVerbFrames(index, vfTuples))
@@ -456,7 +456,7 @@ class Synset:
             return self._pointers
         else:
             _requirePointerType(pointerType)
-            return filter(lambda pointer, type=pointerType: pointer.type == type, self._pointers)
+            return list(filter(lambda pointer, type=pointerType: pointer.type == type, self._pointers))
 
     pointers = getPointers  # backwards compatability
 
@@ -473,7 +473,7 @@ class Synset:
         [{noun: canine, canid}]
 
         """
-        return map(Pointer.target, self.getPointers(pointerType))
+        return list(map(Pointer.target, self.getPointers(pointerType)))
 
     pointerTargets = getPointerTargets  # backwards compatability
 
@@ -486,7 +486,7 @@ class Synset:
         0
 
         """
-        return len(filter(Sense.isTagged, self.getSenses())) > 0
+        return len(list(filter(Sense.isTagged, self.getSenses()))) > 0
 
     def __str__(self):
         """Return a human-readable representation.
@@ -494,7 +494,7 @@ class Synset:
         >>> str(N['dog'][0].synset)
         '{noun: dog, domestic dog, Canis familiaris}'
         """
-        return "{" + self.pos + ": " + string.joinfields(map(lambda sense: sense.form, self.getSenses()), ", ") + "}"
+        return "{" + self.pos + ": " + string.joinfields([sense.form for sense in self.getSenses()], ", ") + "}"
 
     def __repr__(self):
         """If ReadableRepresentations is true, return a human-readable
@@ -513,7 +513,7 @@ class Synset:
     #
     # Sequence protocol (a Synset's elements are its senses).
     #
-    def __nonzero__(self):
+    def __bool__(self):
         return 1
 
     def __len__(self):
@@ -538,9 +538,9 @@ class Synset:
         if isinstance(idx, Word):
             idx = idx.form
         if isinstance(idx, StringType):
-            idx = _index(idx, map(lambda sense: sense.form, senses)) or \
+            idx = _index(idx, [sense.form for sense in senses]) or \
                 _index(
-                    idx, map(lambda sense: sense.form, senses), _equalsIgnoreCase)
+                    idx, [sense.form for sense in senses], _equalsIgnoreCase)
         return senses[idx]
 
     def __getslice__(self, i, j):
@@ -652,7 +652,7 @@ class Sense:
 
         def pointsFromThisSense(pointer, selfIndex=senseIndex):
             return pointer.sourceIndex == 0 or pointer.sourceIndex - 1 == selfIndex
-        return filter(pointsFromThisSense, self.synset.getPointers(pointerType))
+        return list(filter(pointsFromThisSense, self.synset.getPointers(pointerType)))
 
     pointers = getPointers  # backwards compatability
 
@@ -669,7 +669,7 @@ class Sense:
         [{noun: canine, canid}]
 
         """
-        return map(Pointer.target, self.getPointers(pointerType))
+        return list(map(Pointer.target, self.getPointers(pointerType)))
 
     pointerTargets = getPointerTargets  # backwards compatability
 
@@ -887,7 +887,7 @@ class Dictionary:
     #
     # Sequence protocol (a Dictionary's items are its Words)
     #
-    def __nonzero__(self):
+    def __bool__(self):
         """Return false.  (This is to avoid scanning the whole index file to
         compute len when a Dictionary is used in test position.)
 
@@ -960,7 +960,7 @@ class Dictionary:
     def keys(self):
         """Return a sorted list of strings that index words in this
         dictionary."""
-        return self.indexFile.keys()
+        return list(self.indexFile.keys())
 
     def has_key(self, form):
         """Return true iff the argument indexes a word in this dictionary.
@@ -1033,7 +1033,7 @@ class _IndexFile:
     #
     # Sequence protocol (an _IndexFile's items are its lines)
     #
-    def __nonzero__(self):
+    def __bool__(self):
         return 1
 
     def __len__(self):
@@ -1048,7 +1048,7 @@ class _IndexFile:
             lines = lines + 1
         return lines
 
-    def __nonzero__(self):
+    def __bool__(self):
         return 1
 
     def __getitem__(self, index):
@@ -1086,7 +1086,7 @@ class _IndexFile:
 
     def keys(self):
         if hasattr(self, 'indexCache'):
-            keys = self.indexCache.keys()
+            keys = list(self.indexCache.keys())
             keys.sort()
             return keys
         else:

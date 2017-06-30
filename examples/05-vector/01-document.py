@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 import os
 import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -75,7 +75,7 @@ print()
 document = Document("a black cat and a white cat", stopwords=True)
 print(document.words)
 print(document.vector.features)
-for feature, weight in document.vector.items():
+for feature, weight in list(document.vector.items()):
     print(feature, weight)
 
 # Document vectors can be bundled into a Model (next example).

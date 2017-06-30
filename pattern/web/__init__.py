@@ -12,7 +12,7 @@
 # smgllib.py is removed from Python 3, a warning is issued in Python 2.6+.
 # Ignore for now.
 
-from __future__ import absolute_import
+
 
 import warnings
 warnings.filterwarnings(
@@ -27,15 +27,15 @@ import socket
 try:
     from urllib.parse import urlsplit, urlparse, urljoin, quote_plus, unquote_plus, urlencode
 except ImportError:
-    from urlparse import urlsplit, urlparse, urljoin
-    from urllib import quote_plus, unquote_plus, urlencode
+    from urllib.parse import urlsplit, urlparse, urljoin
+    from urllib.parse import quote_plus, unquote_plus, urlencode
 
 #import urllib
 
 try:
     import urllib.request as urllib2
 except ImportError:
-    import urllib2
+    import urllib.request, urllib.error, urllib.parse
 
 import ssl
 import base64
@@ -43,12 +43,12 @@ import base64
 try:
     from html.entities import name2codepoint
 except ImportError:
-    from htmlentitydefs import name2codepoint
+    from html.entities import name2codepoint
 
 try:
     from http.client import BadStatusLine
 except ImportError:
-    from httplib import BadStatusLine
+    from http.client import BadStatusLine
 
 try:
     from sgmllib import SGMLParser, SGMLParseError
@@ -58,7 +58,7 @@ except ImportError:
 try:
     from http.cookiejar import CookieJar
 except ImportError:
-    from cookielib import CookieJar
+    from http.cookiejar import CookieJar
 
 import re
 import xml.dom.minidom
@@ -67,7 +67,7 @@ import string
 
 try:
     # Note it's import this is before the io attempt
-    from StringIO import StringIO
+    from io import StringIO
 except:
     from io import StringIO
 
@@ -104,9 +104,9 @@ except:
 
 if sys.version > "3":
     long = int
-    unicode = str
-    basestring = str
-    unichr = chr
+    str = str
+    str = str
+    chr = chr
 
 #### UNICODE #############################################################
 # Latin-1 (ISO-8859-1) encoding is identical to Windows-1252 except for the code points 128-159:
@@ -125,7 +125,7 @@ def fix(s, ignore=""):
         For example: fix("clichÃ©") => u"cliché".
     """
     # http://blog.luminoso.com/2012/08/20/fix-unicode-mistakes-with-python/
-    if not isinstance(s, unicode):
+    if not isinstance(s, str):
         s = s.decode("utf-8")
         # If this doesn't work,
         # copy & paste string in a Unicode .txt,
@@ -155,7 +155,7 @@ def fix(s, ignore=""):
     # Revert words that have the replacement character,
     # i.e., fix("cliché") should not return u"clich�".
     for i, (w1, w2) in enumerate(zip(s.split(" "), u)):
-        if u"\ufffd" in w2:  # �
+        if "\ufffd" in w2:  # �
             u[i] = w1
     u = " ".join(u)
     u = u.replace("\n ", "\n")
@@ -166,14 +166,14 @@ def latin(s):
     """ Returns True if the string contains only Latin-1 characters
         (no Chinese, Japanese, Arabic, Cyrillic, Hebrew, Greek, ...).
     """
-    if not isinstance(s, unicode):
+    if not isinstance(s, str):
         s = s.decode("utf-8")
     return all(unicodedata.name(ch).startswith("LATIN") for ch in s if ch.isalpha())
 
 
 def decode_string(v, encoding="utf-8"):
     """Returns the given value as a Unicode string (if possible)."""
-    if isinstance(encoding, basestring):
+    if isinstance(encoding, str):
         encoding = ((encoding,),) + (("windows-1252",), ("utf-8", "ignore"))
     if isinstance(v, str):
         for e in encoding:
@@ -182,14 +182,14 @@ def decode_string(v, encoding="utf-8"):
             except:
                 pass
         return v
-    return unicode(v)
+    return str(v)
 
 
 def encode_string(v, encoding="utf-8"):
     """Returns the given value as a Python byte string (if possible)."""
-    if isinstance(encoding, basestring):
+    if isinstance(encoding, str):
         encoding = ((encoding,),) + (("windows-1252",), ("utf-8", "ignore"))
-    if isinstance(v, unicode):
+    if isinstance(v, str):
         for e in encoding:
             try:
                 return v.encode(*e)
@@ -356,7 +356,7 @@ class Error(Exception):
 
     @property
     def headers(self):
-        return dict(self.src.headers.items())
+        return dict(list(self.src.headers.items()))
 
 
 class URLError(Error):
@@ -413,7 +413,7 @@ class HTTP503ServiceUnavailable(HTTPError):
 
 class URL(object):
 
-    def __init__(self, string=u"", method=GET, query={}, **kwargs):
+    def __init__(self, string="", method=GET, query={}, **kwargs):
         """ URL object with the individual parts available as attributes:
             For protocol://username:password@domain:port/path/page?query_string#anchor:
             - URL.protocol: http, https, ftp, ...
@@ -453,19 +453,19 @@ class URL(object):
         """
         p = urlsplit(self._string)
         P = {PROTOCOL: p[0],            # http
-             USERNAME: u"",             # user
-             PASSWORD: u"",             # pass
+             USERNAME: "",             # user
+             PASSWORD: "",             # pass
              DOMAIN: p[1],            # example.com
-             PORT: u"",             # 992
+             PORT: "",             # 992
              PATH: p[2],            # [animal]
-             PAGE: u"",             # bird
+             PAGE: "",             # bird
              QUERY: urldecode(p[3]),  # {"species": "seagull", "q": None}
              ANCHOR: p[4]             # wings
              }
         # Split the username and password from the domain.
         if "@" in P[DOMAIN]:
             P[USERNAME], \
-                P[PASSWORD] = (p[1].split("@")[0].split(":") + [u""])[:2]
+                P[PASSWORD] = (p[1].split("@")[0].split(":") + [""])[:2]
             P[DOMAIN] = p[1].split("@")[1]
         # Split the port number from the domain.
         if ":" in P[DOMAIN]:
@@ -476,7 +476,7 @@ class URL(object):
         if "/" in P[PATH]:
             P[PAGE] = p[2].split("/")[-1]
             P[PATH] = p[2][:len(p[2]) - len(P[PAGE])].strip("/").split("/")
-            P[PATH] = filter(lambda v: v != "", P[PATH])
+            P[PATH] = [v for v in P[PATH] if v != ""]
         else:
             P[PAGE] = p[2].strip("/")
             P[PATH] = []
@@ -485,7 +485,7 @@ class URL(object):
     # URL.string yields unicode(URL) by joining the different parts,
     # if the URL parts have been modified.
     def _get_string(self):
-        return unicode(self)
+        return str(self)
 
     def _set_string(self, v):
         self.__dict__["_string"] = u(v)
@@ -504,7 +504,7 @@ class URL(object):
     def querystring(self):
         """ Yields the URL querystring: "www.example.com?page=1" => "page=1"
         """
-        s = self.parts[QUERY].items()
+        s = list(self.parts[QUERY].items())
         s = dict((bytestring(k), bytestring(v if v is not None else ""))
                  for k, v in s)
         s = urlencode(s)
@@ -552,13 +552,13 @@ class URL(object):
         # Handle proxies and cookies.
         handlers = []
         if proxy:
-            handlers.append(urllib2.ProxyHandler({proxy[1]: proxy[0]}))
-        handlers.append(urllib2.HTTPCookieProcessor(CookieJar()))
-        handlers.append(urllib2.HTTPHandler)
-        urllib2.install_opener(urllib2.build_opener(*handlers))
+            handlers.append(urllib.request.ProxyHandler({proxy[1]: proxy[0]}))
+        handlers.append(urllib.request.HTTPCookieProcessor(CookieJar()))
+        handlers.append(urllib.request.HTTPHandler)
+        urllib.request.install_opener(urllib.request.build_opener(*handlers))
         # Send request.
         try:
-            request = urllib2.Request(bytestring(url), post, {
+            request = urllib.request.Request(bytestring(url), post, {
                 "User-Agent": user_agent,
                 "Referer": referrer
             })
@@ -567,8 +567,8 @@ class URL(object):
             if authentication is not None:
                 request.add_header("Authorization", "Basic %s" %
                                    base64.encodestring('%s:%s' % authentication))
-            return urllib2.urlopen(request)
-        except urllib2.HTTPError as e:
+            return urllib.request.urlopen(request)
+        except urllib.error.HTTPError as e:
             if e.code == 301:
                 raise HTTP301Redirect(src=e, url=url)
             if e.code == 400:
@@ -597,14 +597,14 @@ class URL(object):
                     or "timed out" in str((e.args + ("", ""))[1]):
                 raise URLTimeout(src=e, url=url)
             raise URLError(str(e), src=e, url=url)
-        except urllib2.URLError as e:
+        except urllib.error.URLError as e:
             if "timed out" in str(e.reason):
                 raise URLTimeout(src=e, url=url)
             raise URLError(str(e), src=e, url=url)
         except ValueError as e:
             raise URLError(str(e), src=e, url=url)
 
-    def download(self, timeout=10, cached=True, throttle=0, proxy=None, user_agent=USER_AGENT, referrer=REFERRER, authentication=None, unicode=False, **kwargs):
+    def download(self, timeout=10, cached=True, throttle=0, proxy=None, user_agent=USER_AGENT, referrer=REFERRER, authentication=None, str=False, **kwargs):
         """Downloads the content at the given URL (by default it will be cached
         locally).
 
@@ -619,15 +619,15 @@ class URL(object):
             id = repr(self.parts)
             id = re.sub("u{0,1}'oauth_.*?': u{0,1}'.*?', ", "", id)
         # Keep a separate cache of unicode and raw download for same URL.
-        if unicode is True:
+        if str is True:
             id = "u" + id
         if cached and id in CACHE:
             if isinstance(CACHE, dict):  # Not a Cache object.
                 return CACHE[id]
-            if unicode is True:
+            if str is True:
                 return CACHE[id]
-            if unicode is False:
-                return CACHE.get(id, unicode=False)
+            if str is False:
+                return CACHE.get(id, str=False)
         t = time.time()
         # Open a connection with the given settings, read it and (by default)
         # cache the data.
@@ -636,7 +636,7 @@ class URL(object):
                 timeout, proxy, user_agent, referrer, authentication).read()
         except socket.timeout as e:
             raise URLTimeout(src=e, url=self.string)
-        if unicode is True:
+        if str is True:
             data = u(data)
         if cached:
             CACHE[id] = data
@@ -725,7 +725,7 @@ class URL(object):
             u.append("?%s" % self.querystring)
         if P[ANCHOR]:
             u.append("#%s" % P[ANCHOR])
-        u = u"".join(u)
+        u = "".join(u)
         u = u.lstrip("/")
         return u
 
@@ -736,14 +736,14 @@ class URL(object):
         return URL(self.string, self.method, self.query)
 
 
-def download(url=u"", method=GET, query={}, timeout=10, cached=True, throttle=0, proxy=None, user_agent=USER_AGENT, referrer=REFERRER, authentication=None, unicode=False):
+def download(url="", method=GET, query={}, timeout=10, cached=True, throttle=0, proxy=None, user_agent=USER_AGENT, referrer=REFERRER, authentication=None, str=False):
     """Downloads the content at the given URL (by default it will be cached
     locally).
 
     Unless unicode=False, the content is returned as a unicode string.
 
     """
-    return URL(url, method, query).download(timeout, cached, throttle, proxy, user_agent, referrer, authentication, unicode)
+    return URL(url, method, query).download(timeout, cached, throttle, proxy, user_agent, referrer, authentication, str)
 
 # url = URL("http://user:pass@example.com:992/animal/bird?species#wings")
 # print(url.parts)
@@ -836,7 +836,7 @@ def find_urls(string, unique=True):
 
     """
     string = u(string)
-    string = string.replace(u"\u2024", ".")
+    string = string.replace("\u2024", ".")
     string = string.replace(" ", "  ")
     matches = []
     for p in (RE_URL1, RE_URL2, RE_URL3):
@@ -857,7 +857,7 @@ RE_EMAIL = re.compile(r"[\w\-\.\+]+@(\w[\w\-]+\.)+[\w\-]+")
 def find_email(string, unique=True):
     """ Returns a list of e-mail addresses parsed from the string.
     """
-    string = u(string).replace(u"\u2024", ".")
+    string = u(string).replace("\u2024", ".")
     matches = []
     for m in RE_EMAIL.finditer(string):
         s = m.group(0)
@@ -1077,7 +1077,7 @@ def encode_entities(string):
         For example, to display "<em>hello</em>" in a browser,
         we need to pass "&lt;em&gt;hello&lt;/em&gt;" (otherwise "hello" in italic is displayed).
     """
-    if isinstance(string, basestring):
+    if isinstance(string, str):
         string = RE_AMPERSAND.sub("&amp;", string)
         string = string.replace("<", "&lt;")
         string = string.replace(">", "&gt;")
@@ -1094,13 +1094,13 @@ def decode_entities(string):
         hash, hex, name = match.group(1), match.group(2), match.group(3)
         if hash == "#" or name.isdigit():
             if hex == "":
-                return unichr(int(name))                 # "&#38;" => "&"
+                return chr(int(name))                 # "&#38;" => "&"
             if hex.lower() == "x":
-                return unichr(int("0x" + name, 16))      # "&#x0026;" = > "&"
+                return chr(int("0x" + name, 16))      # "&#x0026;" = > "&"
         else:
             cp = name2codepoint.get(name)  # "&amp;" => "&"
-            return unichr(cp) if cp else match.group()   # "&foo;" => "&foo;"
-    if isinstance(string, basestring):
+            return chr(cp) if cp else match.group()   # "&foo;" => "&foo;"
+    if isinstance(string, str):
         return RE_UNICODE.subn(replace_entity, string)[0]
     return string
 
@@ -1222,16 +1222,16 @@ class Result(dict):
         """
         dict.__init__(self)
         self.url = url
-        self.id = kwargs.pop("id", u"")
-        self.title = kwargs.pop("title", u"")
-        self.text = kwargs.pop("text", u"")
-        self.language = kwargs.pop("language", u"")
-        self.author = kwargs.pop("author", u"")
-        self.date = kwargs.pop("date", u"")
+        self.id = kwargs.pop("id", "")
+        self.title = kwargs.pop("title", "")
+        self.text = kwargs.pop("text", "")
+        self.language = kwargs.pop("language", "")
+        self.author = kwargs.pop("author", "")
+        self.date = kwargs.pop("date", "")
         self.votes = kwargs.pop("votes", 0)  # (e.g., Facebook likes)
         self.shares = kwargs.pop("shares", 0)  # (e.g., Twitter retweets)
         self.comments = kwargs.pop("comments", 0)
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             self[k] = v
 
     @property
@@ -1262,14 +1262,14 @@ class Result(dict):
         if isinstance(v, str):  # Store strings as unicode.
             return u(v)
         if v is None:
-            return u""
+            return ""
         return v
 
     def __getattr__(self, k):
-        return self.get(k, u"")
+        return self.get(k, "")
 
     def __getitem__(self, k):
-        return self.get(k, u"")
+        return self.get(k, "")
 
     def __setattr__(self, k, v):
         self.__setitem__(k, v)
@@ -1282,10 +1282,10 @@ class Result(dict):
 
     def update(self, *args, **kwargs):
         dict.update(self, [(u(k), self._format(v))
-                           for k, v in dict(*args, **kwargs).items()])
+                           for k, v in list(dict(*args, **kwargs).items())])
 
     def __repr__(self):
-        return "Result(%s)" % repr(dict((k, v) for k, v in self.items() if v))
+        return "Result(%s)" % repr(dict((k, v) for k, v in list(self.items()) if v))
 
 
 class Results(list):
@@ -1812,9 +1812,9 @@ class Twitter(SearchEngine):
         """
         if type != SEARCH:
             raise SearchEngineTypeError
-        if not query or count < 1 or (isinstance(start, (int, long, float)) and start < 1):
+        if not query or count < 1 or (isinstance(start, (int, float)) and start < 1):
             return Results(TWITTER, query, type)
-        if not isinstance(start, (int, long, float)):
+        if not isinstance(start, (int, float)):
             id = int(start) - 1 if start and start.isdigit() else ""
         else:
             if start == 1:
@@ -1837,7 +1837,7 @@ class Twitter(SearchEngine):
         # "10km".
         if "geo" in kwargs:
             url.query["geocode"] = ",".join(
-                (map(str, kwargs.pop("geo")) + ["10km"])[:3])
+                (list(map(str, kwargs.pop("geo"))) + ["10km"])[:3])
         # 3) Restrict most recent with date="YYYY-MM-DD".
         #    Only older tweets are returned.
         if "date" in kwargs:
@@ -1892,7 +1892,7 @@ class Twitter(SearchEngine):
         #
         # Store the last id retrieved.
         # If search() is called again with start+1, start from this id.
-        if isinstance(start, (int, long, float)):
+        if isinstance(start, (int, float)):
             k = (query, kwargs.get("geo"), kwargs.get(
                 "date"), int(start), count)
             if results:
@@ -2271,7 +2271,7 @@ class MediaWiki(SearchEngine):
 
 class MediaWikiArticle(object):
 
-    def __init__(self, title=u"", source=u"", links=[], categories=[], languages={}, disambiguation=False, **kwargs):
+    def __init__(self, title="", source="", links=[], categories=[], languages={}, disambiguation=False, **kwargs):
         """A MediaWiki article returned from MediaWiki.search().
 
         MediaWikiArticle.string contains the HTML content.
@@ -2293,7 +2293,7 @@ class MediaWikiArticle(object):
         self.language = kwargs.get("language", "en")
         self.redirects = kwargs.get("redirects", [])
         self.parser = kwargs.get("parser", MediaWiki())
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             setattr(self, k, v)
 
     def _plaintext(self, string, **kwargs):
@@ -2341,7 +2341,7 @@ class MediaWikiArticle(object):
         s = re.sub(r"\[edit\]\s*", "", s)
         s = re.sub(r"\[%s\]\s*" % {
             "en":  "edit",
-            "es": u"editar código",
+            "es": "editar código",
             "de":  "Bearbeiten",
             "fr":  "modifier le code",
             "it":  "modifica sorgente",
@@ -2374,7 +2374,7 @@ class MediaWikiArticle(object):
 
 class MediaWikiSection(object):
 
-    def __init__(self, article, title=u"", start=0, stop=0, level=1):
+    def __init__(self, article, title="", start=0, stop=0, level=1):
         """A (nested) section in the content of a MediaWikiArticle."""
         self.article = article  # MediaWikiArticle the section is part of.
         self.parent = None    # MediaWikiSection the section is part of.
@@ -2474,7 +2474,7 @@ class MediaWikiSection(object):
 
 class MediaWikiTable(object):
 
-    def __init__(self, section, title=u"", headers=[], rows=[], source=u""):
+    def __init__(self, section, title="", headers=[], rows=[], source=""):
         """ A <table class="wikitable> in a MediaWikiSection.
         """
         self.section = section  # MediaWikiSection the table is part of.
@@ -2704,7 +2704,7 @@ class Wikia(MediaWiki):
                 kwargs["timeout"] = 10 * (1 + len(batch))
                 data = url.download(**kwargs)
                 data = json.loads(data)
-                for x in (data or {}).get("pages", {}).values():
+                for x in list((data or {}).get("pages", {}).values()):
                     yield WikiaArticle(title=x.get("title", ""), source=x.get("html", ""))
                 if done:
                     raise StopIteration
@@ -2766,7 +2766,7 @@ class DBPediaQueryError(HTTP400BadRequest):
     pass
 
 
-class DBPediaResource(unicode):
+class DBPediaResource(str):
 
     @property
     def name(self):
@@ -2916,7 +2916,7 @@ class FlickrResult(Result):
         url = FLICKR + \
             "?method=flickr.photos.getSizes&photo_id=%s&api_key=%s" % (
                 self._id, self._license)
-        data = URL(url).download(throttle=self._throttle, unicode=True)
+        data = URL(url).download(throttle=self._throttle, str=True)
         data = xml.dom.minidom.parseString(bytestring(data))
         size = {TINY: "Thumbnail",
                 SMALL: "Small",
@@ -3421,7 +3421,7 @@ class Node(object):
         """Removes the given child node (and all nested nodes)."""
         child._p.extract()
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
 
     def __len__(self):
@@ -3511,7 +3511,7 @@ class Element(Node):
     @property
     def content(self):
         """Yields the element content as a unicode string."""
-        return u"".join([u(x) for x in self._p.contents])
+        return "".join([u(x) for x in self._p.contents])
 
     string = content
 
@@ -3529,11 +3529,11 @@ class Element(Node):
         (e.g. div#content).
 
         """
-        if isinstance(v, basestring) and "#" in v:
+        if isinstance(v, str) and "#" in v:
             v1, v2 = v.split("#")
             v1 = v1 in ("*", "") or v1.lower()
             return [Element(x) for x in self._p.findAll(v1, id=v2)]
-        if isinstance(v, basestring) and "." in v:
+        if isinstance(v, str) and "." in v:
             v1, v2 = v.split(".")
             v1 = v1 in ("*", "") or v1.lower()
             return [Element(x) for x in self._p.findAll(v1, v2)]
@@ -3726,7 +3726,7 @@ class Selector(object):
     def _next_sibling(self, e):
         """Returns the first next sibling Element of the given element."""
         while isinstance(e, Node):
-            e = e.next
+            e = e.__next__
             if isinstance(e, Element):
                 return e
 
@@ -3754,13 +3754,13 @@ class Selector(object):
             return False
         if self.id not in ((e.id or "").lower(), "", None):
             return False
-        if self.classes.issubset(set(map(lambda s: s.lower(), e.attr.get("class", [])))) is False:
+        if self.classes.issubset(set([s.lower() for s in e.attr.get("class", [])])) is False:
             return False
         if "first-child" in self.pseudo and self._first_child(e.parent) != e:
             return False
         if any(x.startswith("contains") and not self._contains(e, x) for x in self.pseudo):
             return False  # jQuery :contains("...") selector.
-        for k, v in self.attributes.items():
+        for k, v in list(self.attributes.items()):
             # TODO is ' '.join(e.attrs[k])) correct?
             if k not in e.attrs or not (v is True or re.search(v, ' '.join(e.attrs[k])) is not None):
                 return False
@@ -3773,24 +3773,24 @@ class Selector(object):
         # Map id into a case-insensitive **kwargs dict.
         i = lambda s: re.compile(r"\b%s(?=$|\s)" % s, re.I)
         a = {"id": i(self.id)} if self.id else {}
-        a.update(map(lambda kv: (kv[0], kv[1]), self.attributes.items()))
+        a.update([(kv[0], kv[1]) for kv in list(self.attributes.items())])
         # Match tag + id + all classes + relevant pseudo-elements.
         if not isinstance(e, Element):
             return []
         if len(self.classes) == 0 or len(self.classes) >= 2:
-            e = map(Element, e._p.findAll(tag, attrs=a))
+            e = list(map(Element, e._p.findAll(tag, attrs=a)))
         if len(self.classes) == 1:
-            e = map(Element,
-                    e._p.findAll(tag, atts=dict(a, **{"class": i(list(self.classes)[0])})))
+            e = list(map(Element,
+                    e._p.findAll(tag, atts=dict(a, **{"class": i(list(self.classes)[0])}))))
         if len(self.classes) >= 2:
             # e = filter(lambda e: self.classes.issubset(set(e.attr.get("class", "").lower().split())), e)
-            e = filter(lambda e: self.classes.issubset(
-                set([c.lower() for c in e.attr.get("class", "")])), e)
+            e = [e for e in e if self.classes.issubset(
+                set([c.lower() for c in e.attr.get("class", "")]))]
         if "first-child" in self.pseudo:
-            e = filter(lambda e: e == self._first_child(e.parent), e)
+            e = [e for e in e if e == self._first_child(e.parent)]
         if any(x.startswith("contains") for x in self.pseudo):
-            e = filter(lambda e: all(
-                not x.startswith("contains") or self._contains(e, x) for x in self.pseudo), e)
+            e = [e for e in e if all(
+                not x.startswith("contains") or self._contains(e, x) for x in self.pseudo)]
         return e
 
     def __repr__(self):
@@ -3834,20 +3834,20 @@ class SelectorChain(list):
                 # Search Y, where:
                 if combinator == " ":
                     # X Y => X is ancestor of Y
-                    e = map(s.search, e)
+                    e = list(map(s.search, e))
                     e = list(itertools.chain(*e))
                 if combinator == ">":
                     # X > Y => X is parent of Y
-                    e = map(lambda e: filter(s.match, e.children), e)
+                    e = [list(filter(s.match, e.children)) for e in e]
                     e = list(itertools.chain(*e))
                 if combinator == "<":
                     # X < Y => X is child of Y
-                    e = map(lambda e: e.parent, e)
-                    e = filter(s.match, e)
+                    e = [e.parent for e in e]
+                    e = list(filter(s.match, e))
                 if combinator == "+":
                     # X + Y => X directly precedes Y
-                    e = map(s._next_sibling, e)
-                    e = filter(s.match, e)
+                    e = list(map(s._next_sibling, e))
+                    e = list(filter(s.match, e))
             m.extend(e)
         return m
 
@@ -3977,7 +3977,7 @@ class Crawler(object):
         self.QUEUE = 10000
         self.sort = sort
         # Queue given links in given order:
-        for link in (isinstance(links, basestring) and [links] or links):
+        for link in (isinstance(links, str) and [links] or links):
             self.push(link, priority=1.0, sort=FIFO)
 
     @property
@@ -4206,7 +4206,7 @@ class DocumentParser(object):
         """ Returns a file-like object with a read() method,
             from the given file path or string.
         """
-        if isinstance(path, basestring) and os.path.exists(path):
+        if isinstance(path, str) and os.path.exists(path):
             return open(path, "rb")
         if hasattr(path, "read"):
             return path
@@ -4329,7 +4329,7 @@ def parsehtml(path, *args, **kwargs):
 def parsedoc(path, format=None):
     """Returns the content as a Unicode string from the given document (.html.,
     .pdf, .docx)."""
-    if isinstance(path, basestring):
+    if isinstance(path, str):
         if format == "pdf" or path.endswith(".pdf"):
             return parsepdf(path)
         if format == "docx" or path.endswith(".docx"):

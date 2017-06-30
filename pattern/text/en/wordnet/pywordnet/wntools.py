@@ -29,7 +29,7 @@ Usage
     [('raise' in {verb: raise, lift, elevate, get up, bring up}, 'lower' in {verb: lower, take down, let down, get down, bring down})]
 
 """
-from __future__ import absolute_import
+
 from functools import reduce
 
 __author__ = "Oliver Steele <steele@osteele.com>"
@@ -70,9 +70,9 @@ def tree(source, pointerType):
     >>> #pprint(tree(dog, HYPONYM)) # too verbose to include here
     """
     if isinstance(source,  Word):
-        return map(lambda s, t=pointerType: tree(s, t), source.getSenses())
+        return list(map(lambda s, t=pointerType: tree(s, t), source.getSenses()))
     _requireSource(source)
-    return [source] + map(lambda s, t=pointerType: tree(s, t), source.pointerTargets(pointerType))
+    return [source] + list(map(lambda s, t=pointerType: tree(s, t), source.pointerTargets(pointerType)))
 
 
 def closure(source, pointerType, accumulator=None):
@@ -86,7 +86,7 @@ def closure(source, pointerType, accumulator=None):
 
     """
     if isinstance(source, Word):
-        return reduce(union, map(lambda s, t=pointerType: tree(s, t), source.getSenses()))
+        return reduce(union, list(map(lambda s, t=pointerType: tree(s, t), source.getSenses())))
     _requireSource(source)
     if accumulator is None:
         accumulator = []
@@ -224,7 +224,7 @@ def product(u, v):
     [('1', 'a'), ('1', 'b'), ('1', 'c'), ('2', 'a'), ('2', 'b'), ('2', 'c'), ('3', 'a'), ('3', 'b'), ('3', 'c')]
 
     """
-    return flatten1(map(lambda a, v=v: map(lambda b, a=a: (a, b), v), u))
+    return flatten1(list(map(lambda a, v=v: list(map(lambda b, a=a: (a, b), v)), u)))
 
 
 def removeDuplicates(sequence):

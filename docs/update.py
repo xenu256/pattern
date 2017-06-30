@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 #### DOCUMENTATION GENERATOR ##########################################################################
 # Keeps the offline documention in synch with the online documentation.
 # Simply run "python update.py" to generate the latest version.

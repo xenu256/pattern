@@ -1,4 +1,4 @@
-from __future__ import print_function
+
 
 from util import *
 
@@ -290,7 +290,7 @@ class TestStatistics(unittest.TestCase):
         # Assert 2 bins, one with all the low numbers, one with the high
         # number.
         v = metrics.histogram([1, 2, 3, 4, 100], k=2)
-        v = sorted(v.values(), key=lambda item: len(item))
+        v = sorted(list(v.values()), key=lambda item: len(item))
         self.assertTrue(v[0] == [100])
         self.assertTrue(v[1] == [1, 2, 3, 4])
         print("pattern.metrics.histogram()")

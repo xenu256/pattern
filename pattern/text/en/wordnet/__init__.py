@@ -17,7 +17,7 @@
 # -  meronym = a word that is a part of the whole,  (tree => trunk)
 # -  antonym = a word that is opposite in meaning.
 
-from __future__ import absolute_import
+
 
 # The bundled version of PyWordNet has custom fixes.
 # - line  365: check if lexnames exist.
@@ -53,10 +53,10 @@ from .pywordnet import wordnet as wn
 from .pywordnet import wntools
 
 try:
-    basestring
+    str
 except NameError: # python 3
-    basestring = str
-    unicode = str
+    str = str
+    str = str
 
 VERSION = ""
 s = open(os.path.join(MODULE, CORPUS, "dict", "index.noun")).read(2048)
@@ -85,14 +85,14 @@ DIACRITICS = {
 def normalize(word):
     """Normalizes the word for synsets() or Sentiwordnet[] by removing
     diacritics (PyWordNet does not take unicode)."""
-    if not isinstance(word, basestring):
+    if not isinstance(word, str):
         word = str(word)
     if not isinstance(word, str):
         try:
             word = word.encode("utf-8", "ignore")
         except:
             pass
-    for k, v in DIACRITICS.items():
+    for k, v in list(DIACRITICS.items()):
         for v in v:
             word = word.replace(v, k)
     return word
@@ -140,19 +140,19 @@ class Synset(object):
         if isinstance(synset, int):
             synset = wn.getSynset(
                 {NN: "n", VB: "v", JJ: "adj", RB: "adv"}[pos], synset)
-        if isinstance(synset, basestring):
+        if isinstance(synset, str):
             synset = synsets(synset, pos)[0]._synset
         self._synset = synset
 
     def __iter__(self):
         for s in self._synset.getSenses():
-            yield unicode(s.form)
+            yield str(s.form)
 
     def __len__(self):
         return len(self._synset.getSenses())
 
     def __getitem__(self, i):
-        return unicode(self._synset.getSenses()[i].form)
+        return str(self._synset.getSenses()[i].form)
 
     def __eq__(self, synset):
         return isinstance(synset, Synset) and self.id == synset.id
@@ -188,7 +188,7 @@ class Synset(object):
         """ Yields a list of word forms (i.e. synonyms), for example:
             synsets("TV")[0].synonyms => ["television", "telecasting", "TV", "video"]
         """
-        return [unicode(s.form) for s in self._synset.getSenses()]
+        return [str(s.form) for s in self._synset.getSenses()]
 
     # Backwards compatibility; senses = list of Synsets for a word.
     senses = synonyms
@@ -198,12 +198,12 @@ class Synset(object):
         """ Yields a descriptive string, for example:
             synsets("glass")[0].gloss => "a brittle transparent solid with irregular atomic structure".
         """
-        return unicode(self._synset.gloss)
+        return str(self._synset.gloss)
 
     @property
     def lexname(self):
         """Yields a category, e.g., noun.animal."""
-        return self._synset.lexname and unicode(self._synset.lexname) or None
+        return self._synset.lexname and str(self._synset.lexname) or None
 
     @property
     def antonym(self):
